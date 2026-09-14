@@ -1,0 +1,43 @@
+CREATE TABLE `library_books` (
+	`id` varchar(128) NOT NULL,
+	`title` text NOT NULL,
+	`author` text NOT NULL,
+	`cover` text NOT NULL,
+	`category` varchar(160) NOT NULL,
+	`rating` double NOT NULL DEFAULT 0,
+	`reviewsCount` int NOT NULL DEFAULT 0,
+	`status` enum('disponivel','reservado','em_andamento') NOT NULL DEFAULT 'disponivel',
+	`pages` int NOT NULL DEFAULT 0,
+	`year` int NOT NULL DEFAULT 0,
+	`publisher` varchar(255) NOT NULL DEFAULT 'Biblioteca Maria Quitéria',
+	`location` varchar(255) NOT NULL DEFAULT 'Acervo geral',
+	`synopsis` text NOT NULL,
+	`isbn` varchar(64) NOT NULL DEFAULT '',
+	`totalCopies` int NOT NULL DEFAULT 1,
+	`availableCopies` int NOT NULL DEFAULT 0,
+	`featured` boolean NOT NULL DEFAULT false,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `library_books_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `library_loans` (
+	`id` varchar(128) NOT NULL,
+	`studentName` text NOT NULL,
+	`studentEmail` varchar(320) NOT NULL,
+	`studentAvatar` text,
+	`studentClass` varchar(120) NOT NULL,
+	`studentCode` varchar(120),
+	`bookId` varchar(128) NOT NULL,
+	`bookTitle` text NOT NULL,
+	`bookAuthor` text NOT NULL,
+	`bookCover` text NOT NULL,
+	`loanDate` varchar(32) NOT NULL,
+	`returnDate` varchar(32) NOT NULL,
+	`actualReturnDate` varchar(32),
+	`status` enum('devolvido','em_andamento','atrasado') NOT NULL DEFAULT 'em_andamento',
+	`notes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `library_loans_id` PRIMARY KEY(`id`)
+);
