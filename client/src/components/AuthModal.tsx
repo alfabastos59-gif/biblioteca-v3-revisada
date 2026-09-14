@@ -4,6 +4,7 @@ import { Student, UserSession, AdminUser } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
 import { ADMIN_AVATAR_OPTIONS } from '../data/adminAvatars';
+import { isAdminPinValid } from '../../../shared/admin-security';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -93,11 +94,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     const targetAdmin = adminUsers.find((a) => a.id === selectedAdminId) || adminUsers[0];
 
-    // Master password or individual admin pin
-    const isMasterPass = adminPasswordInput === 'adm123';
-    const isUserPin = targetAdmin && targetAdmin.pin && adminPasswordInput === targetAdmin.pin;
+    // Only the selected administrator's current PIN is valid. There is no
+    // master fallback, so an old PIN stops working immediately after change.
+    const isUserPin = targetAdmin && isAdminPinValid(targetAdmin.pin, adminPasswordInput);
 
-    if (isMasterPass || isUserPin) {
+    if (isUserPin) {
       // Clear password immediately on successful login
       setAdminPasswordInput('');
       setShowPassword(false);
@@ -118,7 +119,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       });
       handleClose();
     } else {
-      setErrorMessage('Senha / PIN de Administrador incorreto. Digite a senha do usuário selecionado ou a senha mestra adm123.');
+      setErrorMessage('Senha / PIN de Administrador incorreto. Use a credencial atual do usuário selecionado.');
     }
   };
 
@@ -323,7 +324,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type={showPassword ? 'text' : 'password'}
                     value={adminPasswordInput}
                     onChange={(e) => setAdminPasswordInput(e.target.value)}
-                    placeholder="Digite seu PIN ou senha (ex: adm123)"
+                    placeholder="Digite o PIN atual do usuário selecionado"
                     autoFocus
                     autoComplete="new-password"
                     autoCorrect="off"

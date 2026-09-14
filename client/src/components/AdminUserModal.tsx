@@ -16,6 +16,7 @@ import {
 import { AdminUser, AdminRole } from '../types';
 import { ADMIN_AVATAR_OPTIONS } from '../data/adminAvatars';
 import { useTheme } from '../context/ThemeContext';
+import { replaceAdminPin } from '../../../shared/admin-security';
 
 interface AdminUserModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<AdminRole>('bibliotecario');
-  const [pin, setPin] = useState('1234');
+  const [pin, setPin] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<'ativo' | 'inativo'>('ativo');
@@ -49,7 +50,9 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
       setName(adminToEdit.name);
       setEmail(adminToEdit.email);
       setRole(adminToEdit.role);
-      setPin(adminToEdit.pin || '1234');
+      // Never expose or copy the existing credential into the form. A value
+      // entered here is treated as a replacement, not as an addition to it.
+      setPin('');
       setPhone(adminToEdit.phone || '');
       setNotes(adminToEdit.notes || '');
       setStatus(adminToEdit.status);
@@ -59,7 +62,7 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
       setName('');
       setEmail('');
       setRole('bibliotecario');
-      setPin('1234');
+      setPin('');
       setPhone('');
       setNotes('');
       setStatus('ativo');
@@ -96,6 +99,12 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
 
     const finalAvatar = customAvatarUrl.trim() ? customAvatarUrl.trim() : avatar;
 
+    const nextPin = replaceAdminPin(adminToEdit?.pin, pin);
+    if (!nextPin) {
+      setErrorMessage('Informe uma senha / PIN para este administrador.');
+      return;
+    }
+
     const updatedOrNewUser: AdminUser = {
       id: adminToEdit ? adminToEdit.id : `adm_${Date.now()}`,
       name: name.trim(),
@@ -103,7 +112,9 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
       role,
       roleLabel: roleLabelMap[role],
       avatar: finalAvatar,
-      pin: pin.trim() || '1234',
+      // A new PIN replaces the old value completely. If editing and the field
+      // is blank, keep the existing PIN without displaying it to the user.
+      pin: nextPin,
       phone: phone.trim() || undefined,
       notes: notes.trim() || undefined,
       status,
@@ -359,16 +370,17 @@ export const AdminUserModal: React.FC<AdminUserModalProps> = ({
             {/* Senha / PIN */}
             <div>
               <label className={`block text-xs font-semibold mb-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                Senha / PIN de Acesso *
+                {adminToEdit ? 'Nova Senha / PIN de Acesso' : 'Senha / PIN de Acesso *'}
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
-                  type="text"
-                  required
+                  type="password"
+                  required={!adminToEdit}
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  placeholder="Ex: adm123 ou 1234"
+                  autoComplete={adminToEdit ? 'new-password' : 'new-password'}
+                  placeholder={adminToEdit ? 'Deixe vazio para manter a atual' : 'Ex: 1234 ou biblioteca2026'}
                   className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-sm font-mono focus:outline-none focus:border-emerald-500 ${
                     isDark
                       ? 'bg-[#071828] border-[#163650] text-white placeholder-slate-500'
